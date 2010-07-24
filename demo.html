@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Sammy.Fire - Demo</title>
+    <link type="text/css" rel="stylesheet" media="all" href="sammy.fire.css">
+
+    <script type="text/javascript" src="js-deps/jquery.js"></script>
+    <script type="text/javascript" src="js-deps/jquery-ui.js"></script>
+    <script type="text/javascript" src="js-deps/sammy.js"></script>
+    <script type="text/javascript" src="js-deps/sammy.json.js"></script>
+    <script type="text/javascript" src="js-deps/sammy.storage.js"></script>
+    <script type="text/javascript" src="sammy.fire.js"></script>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <script type="text/javascript">
+
+			// don't log GET-404-Errors
+			// place at the end of an app
+			var Silencer = function(app) {
+			  app.get(/^.*$/, function(c){ return true; }); // silent 404
+			};
+			
+      Sammy('#fireserver', function(app){
+        app.fireGhostPos = function(){ return {my: 'center center', at: 'center center', of: $('body'), collision: 'none'}; };
+        app.use(Fire.Server);
+        app.use(Silencer);
+      });
+      Sammy('#fireclient-a', function(app){
+        app.use(Fire.Client);
+        app.bind('run', function(){
+	        this.fire.connect("#fireserver");
+        });
+        app.get('#!/defaultwithghost', function(c){
+          c.fire.flash({msg: 'foo', ghost: true});
+          c.redirect("#!/");
+        });
+        app.use(Silencer);
+      });
+      Sammy('#fireclient-b', function(app){
+        app.use(Fire.Client);
+        app.bind('run', function(){
+	        this.fire.connect("#fireserver");
+        });
+        app.get('#!/loading', function(c){
+          var fire = c.fire.flash({msg: 'foox', type: 'loading'});
+          setTimeout(function(){
+	          c.fire.vanish(fire);
+          },5000);
+          c.redirect("#!/");
+        });
+        app.use(Silencer);
+      });
+      jQuery(document).ready(function(){
+        Sammy('#fireserver').run();
+        Sammy("#fireclient-a").run();
+        Sammy("#fireclient-b").run();
+        $("[href=#!/jquery]").click(function(){
+	        $("#fireserver").trigger("fire-flash",{"msg": "from jquery"});
+				});	
+    	});
+
+    </script>
+  </head>
+  <body>
+	  <h1>fireserver</h1>
+    <div id='fireserver'> </div>
+
+    <!-- call fireserver -->
+    <h1>fireclients</h1>
+    <h2>fireclient a</h2>
+    <p id='fireclient-a'>
+      <a href='#!/defaultwithghost'>default with ghost</a>
+    </p>
+    <h2>fireclient b</h2>
+    <p id='fireclient-b'>
+	    <a href='#!/loading'>loading</a>
+    </p>
+    <h1>fire from jquery (outside sammy)</h1>
+    <a href="#!/jquery">$("#fireserver").trigger("fire-flash",{"msg": "from jquery"});</a>
+  </body>
+</html>
