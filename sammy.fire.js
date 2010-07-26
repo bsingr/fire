@@ -6,8 +6,10 @@
 	Fire = {};
 	Fire.VERSION = "0.2.0";
 	
-	Fire.generateId = function(){ return Math.random().toString().replace('.','').replace(/^0+/, ''); }; // no ".", no leading "0"
-  Fire.Client = function(app){
+	var generateId = function(){ return Math.random().toString().replace('.','').replace(/^0+/, ''); }; // no ".", no leading "0"
+  Fire.generateId = generateId;
+
+  var client = function(app){
 	  app.use(Sammy.Storage);
 	  app.helpers({
 	    fire: {
@@ -23,7 +25,7 @@
 			    }
 			  }
 				,flash: function(opts) {
-				  if (!opts.id) { opts.id = Fire.generateId(); }
+				  if (!opts.id) { opts.id = generateId(); }
 		      if ($(this.fireServer).length) {
 		        Sammy(this.fireServer).trigger('fire-flash', opts);
 		      } else {
@@ -32,7 +34,7 @@
 		      return opts;
 			  }
 			  ,vanish: function(opts) {
-				  if (!opts.id) { opts.id = Fire.generateId(); }
+				  if (!opts.id) { opts.id = generateId(); }
 			    if ($(this.fireServer).length) {
 		        Sammy(this.fireServer).trigger('fire-vanish', opts);
 		      } else {
@@ -43,7 +45,9 @@
 		  }      
 	  });
 	};
-	Fire.Server = function(app){
+  Fire.Client = client;
+
+	var server = function(app){
 		var staticHtml = function(){
 			var bar = "<div class='fire-bar'><span class='count'>0</span> Notifications<span class='latest'></span></div>\n";
 			var dialog = "<div class='fire-dialog-wrapper'>\n<div class='fire-dialog'>\n<h3>Notifications</h3>\n<div class='content'> </div>\n<h3>Timed-out Notifications (max. 5)</h3>\n<div class='contentArchive'> </div>\n</div>\n</div>\n";
@@ -82,8 +86,8 @@
 	  });
 	  var Fire = function(opts) {
 	    this.data = $.extend({}, defaults.defaultFire, opts);
-	    if (!this.data.id) { 
-	      this.data.id = Fire.generateId();
+	    if (!this.data.id) {
+	      this.data.id = generateId();
 	    }
 	    this.timeout = function(callback){
 	      if (this.data.timeout && this.data.type != 'loading') {
@@ -202,4 +206,5 @@
 	    }
 	  });
 	};
+  Fire.Server = server;
 })(jQuery);
